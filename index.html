@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>보건실 방문 키오스크</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 귀여운 폰트 적용 (Jua) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Jua', sans-serif;
+            background-color: #f0fdf4; /* 부드러운 파스텔 그린 배경 */
+            background-image: radial-gradient(#dcfce7 20%, transparent 20%), radial-gradient(#dcfce7 20%, transparent 20%);
+            background-color: #f0fdf4;
+            background-position: 0 0, 25px 25px;
+            background-size: 50px 50px;
+            user-select: none; /* 텍스트 선택 방지 */
+            overflow: hidden; /* 스크롤 방지 */
+        }
+        
+        .page {
+            display: none;
+            animation: fadeIn 0.4s ease-in-out;
+        }
+
+        .page.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 젤리 버튼 효과 */
+        .btn-jelly {
+            transition: all 0.2s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        .btn-jelly:active {
+            transform: scale(0.9);
+        }
+    </style>
+</head>
+<body class="h-screen w-screen flex items-center justify-center">
+
+    <!-- 메인 컨테이너 (태블릿 화면 영역) -->
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-4xl h-[90vh] mx-4 overflow-hidden relative flex flex-col border-8 border-green-200">
+        
+        <!-- 상단 헤더 -->
+        <header class="bg-green-400 text-white text-center py-6 text-3xl shadow-md z-10 flex items-center justify-center space-x-3">
+            <span class="text-4xl">🏥</span>
+            <span>보건실에 왔어요!</span>
+            <span class="text-4xl">🏥</span>
+        </header>
+
+        <!-- 페이지 영역 -->
+        <main class="flex-1 relative overflow-hidden bg-gray-50/50 flex flex-col">
+            
+            <!-- 1. 학년 선택 페이지 -->
+            <div id="page-grade" class="page active flex-col items-center justify-center w-full h-full p-6 relative">
+                <!-- 상단 방문 기록 보기 버튼 -->
+                <button onclick="openRecordsModal()" class="btn-jelly absolute top-4 right-6 bg-emerald-500 hover:bg-emerald-600 text-white text-lg py-2 px-4 rounded-2xl shadow-md border-b-4 border-emerald-700 flex items-center space-x-2 font-bold">
+                    <span>📋</span>
+                    <span>방문 기록 보기</span>
+                </button>
+
+                <h2 class="text-4xl text-gray-700 mb-10 text-center font-bold">몇 학년인가요? <span class="text-5xl">🎒</span></h2>
+                <div class="grid grid-cols-3 gap-6 w-full max-w-2xl">
+                    <button onclick="selectGrade(1)" class="btn-jelly bg-rose-300 text-white text-5xl py-10 rounded-3xl shadow-lg border-b-8 border-rose-400">1학년</button>
+                    <button onclick="selectGrade(2)" class="btn-jelly bg-orange-300 text-white text-5xl py-10 rounded-3xl shadow-lg border-b-8 border-orange-400">2학년</button>
+                    <button onclick="selectGrade(3)" class="btn-jelly bg-amber-300 text-white text-5xl py-10 rounded-3xl shadow-lg border-b-8 border-amber-400">3학년</button>
+                    <button onclick="selectGrade(4)" class="btn-jelly bg-green-400 text-white text-5xl py-10 rounded-3xl shadow-lg border-b-8 border-green-500">4학년</button>
+                    <button onclick="selectGrade(5)" class="btn-jelly bg-blue-400 text-white text-5xl py-10 rounded-3xl shadow-lg border-b-8 border-blue-500">5학년</button>
+                    <button onclick="selectGrade(6)" class="btn-jelly bg-indigo-400 text-white text-5xl py-10 rounded-3xl shadow-lg border-b-8 border-indigo-500">6학년</button>
+                </div>
+            </div>
+
+            <!-- 2. 번호 선택 페이지 -->
+            <div id="page-number" class="page flex-col w-full h-full">
+                <!-- 상단 고정 헤더 영역 (이전 버튼이 절대로 가려지지 않음) -->
+                <div class="w-full flex justify-between items-center bg-white/90 backdrop-blur-sm px-6 py-4 shadow-sm z-20 border-b border-gray-100 shrink-0">
+                    <button onclick="goBack('page-grade')" class="btn-jelly bg-gray-500 hover:bg-gray-600 text-white text-xl py-2 px-5 rounded-2xl shadow-md border-b-4 border-gray-700 flex items-center space-x-2 shrink-0">
+                        <span>⬅️</span>
+                        <span>이전</span>
+                    </button>
+                    <h2 class="text-3xl text-gray-700 font-bold text-center flex-1">몇 번인가요? <span class="text-4xl">🙋</span></h2>
+                    <div class="w-20 shrink-0"></div> <!-- 레이아웃 균형용 -->
+                </div>
+                <!-- 하단 스크롤 가능 컨텐츠 영역 -->
+                <div class="flex-1 overflow-y-auto p-6 flex justify-center">
+                    <div class="grid grid-cols-5 gap-4 w-full max-w-3xl h-fit pb-6" id="number-grid">
+                        <!-- JS로 1번부터 30번까지 자동 생성 -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. 증상 선택 페이지 -->
+            <div id="page-symptom" class="page flex-col w-full h-full">
+                <!-- 상단 고정 헤더 영역 -->
+                <div class="w-full flex justify-between items-center bg-white/90 backdrop-blur-sm px-6 py-4 shadow-sm z-20 border-b border-gray-100 shrink-0">
+                    <button onclick="goBack('page-number')" class="btn-jelly bg-gray-500 hover:bg-gray-600 text-white text-xl py-2 px-5 rounded-2xl shadow-md border-b-4 border-gray-700 flex items-center space-x-2 shrink-0">
+                        <span>⬅️</span>
+                        <span>이전</span>
+                    </button>
+                    <h2 class="text-3xl text-gray-700 font-bold text-center flex-1">어디가 아파서 왔나요? <span class="text-4xl">🤒</span></h2>
+                    <div class="w-20 shrink-0"></div>
+                </div>
+                <!-- 하단 스크롤 가능 컨텐츠 영역 -->
+                <div class="flex-1 overflow-y-auto p-6 flex justify-center">
+                    <div class="grid grid-cols-3 gap-4 w-full max-w-3xl h-fit pb-6">
+                        <button onclick="selectSymptom('열이 나요', '🤒')" class="btn-jelly bg-white border-4 border-red-300 rounded-3xl p-5 flex flex-col items-center shadow-md hover:bg-red-50">
+                            <span class="text-5xl mb-2">🤒</span>
+                            <span class="text-2xl text-gray-700">열이 나요</span>
+                        </button>
+                        <button onclick="selectSymptom('머리가 아파요', '🤕')" class="btn-jelly bg-white border-4 border-orange-300 rounded-3xl p-5 flex flex-col items-center shadow-md hover:bg-orange-50">
+                            <span class="text-5xl mb-2">🤕</span>
+                            <span class="text-2xl text-gray-700">머리가 아파요</span>
+                        </button>
+                        <button onclick="selectSymptom('배가 아파요', '🤢')" class="btn-jelly bg-white border-4 border-green-300 rounded-3xl p-5 flex flex-col items-center shadow-md hover:bg-green-50">
+                            <span class="text-5xl mb-2">🤢</span>
+                            <span class="text-2xl text-gray-700">배가 아파요</span>
+                        </button>
+                        <button onclick="selectSymptom('다쳤어요 (피가 나요)', '🩹')" class="btn-jelly bg-white border-4 border-rose-300 rounded-3xl p-5 flex flex-col items-center shadow-md hover:bg-rose-50">
+                            <span class="text-5xl mb-2">🩹</span>
+                            <span class="text-2xl text-gray-700">다쳤어요</span>
+                        </button>
+                        <button onclick="selectSymptom('목이 아파요', '🗣️')" class="btn-jelly bg-white border-4 border-blue-300 rounded-3xl p-5 flex flex-col items-center shadow-md hover:bg-blue-50">
+                            <span class="text-5xl mb-2">🗣️</span>
+                            <span class="text-2xl text-gray-700">목이 아파요</span>
+                        </button>
+                        <button onclick="selectSymptom('기침이 나요', '🤧')" class="btn-jelly bg-white border-4 border-cyan-300 rounded-3xl p-5 flex flex-col items-center shadow-md hover:bg-cyan-50">
+                            <span class="text-5xl mb-2">🤧</span>
+                            <span class="text-2xl text-gray-700">기침이 나요</span>
+                        </button>
+                        <button onclick="selectSymptom('토를 해요', '🤮')" class="btn-jelly bg-white border-4 border-lime-300 rounded-3xl p-5 flex flex-col items-center shadow-md hover:bg-lime-50">
+                            <span class="text-5xl mb-2">🤮</span>
+                            <span class="text-2xl text-gray-700">토를 해요</span>
+                        </button>
+                        <button onclick="selectSymptom('어지러워요', '💫')" class="btn-jelly bg-white border-4 border-purple-300 rounded-3xl p-5 flex flex-col items-center shadow-md hover:bg-purple-50">
+                            <span class="text-5xl mb-2">💫</span>
+                            <span class="text-2xl text-gray-700">어지러워요</span>
+                        </button>
+                        <button onclick="selectSymptom('이빨이 빠졌어요', '🦷')" class="btn-jelly bg-white border-4 border-gray-300 rounded-3xl p-5 flex flex-col items-center shadow-md hover:bg-gray-50">
+                            <span class="text-5xl mb-2">🦷</span>
+                            <span class="text-2xl text-gray-700">이빨 문제</span>
+                        </button>
+                        
+                        <!-- 기타 버튼 -->
+                        <button onclick="selectSymptom('기타 (선생님께 말할래요)', '💬')" class="btn-jelly col-span-3 bg-pink-50 border-4 border-pink-300 rounded-3xl p-4 flex flex-row items-center justify-center space-x-3 shadow-md hover:bg-pink-100">
+                            <span class="text-4xl">💬</span>
+                            <span class="text-2xl text-gray-700 font-bold">다른 곳이 아파요 (기타)</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. 발생 시기 선택 페이지 -->
+            <div id="page-onset" class="page flex-col w-full h-full">
+                <!-- 상단 고정 헤더 영역 -->
+                <div class="w-full flex justify-between items-center bg-white/90 backdrop-blur-sm px-6 py-4 shadow-sm z-20 border-b border-gray-100 shrink-0">
+                    <button onclick="goBack('page-symptom')" class="btn-jelly bg-gray-500 hover:bg-gray-600 text-white text-xl py-2 px-5 rounded-2xl shadow-md border-b-4 border-gray-700 flex items-center space-x-2 shrink-0">
+                        <span>⬅️</span>
+                        <span>이전</span>
+                    </button>
+                    <h2 class="text-3xl text-gray-700 font-bold text-center flex-1">언제부터 그랬나요? <span class="text-4xl">🕒</span></h2>
+                    <div class="w-20 shrink-0"></div>
+                </div>
+                <!-- 하단 스크롤 가능 컨텐츠 영역 -->
+                <div class="flex-1 overflow-y-auto p-6 flex flex-col items-center">
+                    <div class="grid grid-cols-2 gap-4 w-full max-w-2xl h-fit pb-4">
+                        <button onclick="selectOnset('방금 전부터')" class="btn-jelly bg-yellow-100 border-4 border-yellow-400 rounded-3xl py-6 flex flex-col items-center shadow-md">
+                            <span class="text-4xl mb-1">⚡</span>
+                            <span class="text-2xl text-gray-700 font-bold">방금 전부터</span>
+                        </button>
+                        <button onclick="selectOnset('오늘 아침부터')" class="btn-jelly bg-orange-100 border-4 border-orange-400 rounded-3xl py-6 flex flex-col items-center shadow-md">
+                            <span class="text-4xl mb-1">☀️</span>
+                            <span class="text-2xl text-gray-700 font-bold">오늘 아침부터</span>
+                        </button>
+                        <button onclick="selectOnset('어제부터')" class="btn-jelly bg-blue-100 border-4 border-blue-400 rounded-3xl py-6 flex flex-col items-center shadow-md">
+                            <span class="text-4xl mb-1">🌙</span>
+                            <span class="text-2xl text-gray-700 font-bold">어제부터</span>
+                        </button>
+                        <button onclick="selectOnset('주말부터')" class="btn-jelly bg-green-100 border-4 border-green-400 rounded-3xl py-6 flex flex-col items-center shadow-md">
+                            <span class="text-4xl mb-1">⛺</span>
+                            <span class="text-2xl text-gray-700 font-bold">주말부터</span>
+                        </button>
+                        <button onclick="selectOnset('기억이 안 나요')" class="btn-jelly bg-gray-100 border-4 border-gray-400 rounded-3xl py-5 flex flex-col items-center shadow-md">
+                            <span class="text-3xl mb-1">🤔</span>
+                            <span class="text-xl text-gray-700 font-bold">기억이 안 나요</span>
+                        </button>
+                        <button onclick="showCustomOnsetInput()" class="btn-jelly bg-purple-100 border-4 border-purple-400 rounded-3xl py-5 flex flex-col items-center shadow-md">
+                            <span class="text-3xl mb-1">✏️</span>
+                            <span class="text-xl text-purple-800 font-bold">기타 (직접 써요)</span>
+                        </button>
+                    </div>
+
+                    <!-- 기타 직접 입력창 -->
+                    <div id="custom-onset-container" class="hidden w-full max-w-2xl bg-purple-50 p-5 rounded-3xl border-4 border-purple-300 shadow-lg flex-col items-center mb-6">
+                        <label class="text-xl text-purple-900 mb-2 font-bold">언제부터 아팠는지 적어주세요 👇</label>
+                        <div class="flex w-full gap-2">
+                            <input type="text" id="custom-onset-input" placeholder="예: 3교시 체육시간부터, 며칠 전부터..." class="flex-1 text-xl p-3 rounded-2xl border-2 border-purple-300 focus:outline-none focus:border-purple-500 shadow-inner">
+                            <button onclick="submitCustomOnset()" class="btn-jelly bg-purple-500 text-white text-xl px-6 py-3 rounded-2xl font-bold shadow-md">확인</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5. 완료 및 요약 페이지 -->
+            <div id="page-complete" class="page flex-col items-center justify-center w-full h-full p-6">
+                <div class="bg-white p-8 rounded-3xl shadow-xl border-4 border-green-400 text-center w-full max-w-xl relative">
+                    <button onclick="goBack('page-onset')" class="btn-jelly absolute top-5 left-5 bg-gray-500 hover:bg-gray-600 text-white text-lg py-2 px-4 rounded-xl shadow-md flex items-center space-x-1">
+                        <span>⬅️</span>
+                        <span>수정하기</span>
+                    </button>
+
+                    <div class="text-6xl mb-2 mt-4">👩‍⚕️</div>
+                    <h2 class="text-3xl text-green-600 mb-6 font-bold">보건 선생님께 알려주세요!</h2>
+                    
+                    <div class="bg-gray-100 rounded-2xl p-5 mb-6 text-left inline-block w-full">
+                        <p class="text-2xl text-gray-700 mb-3 border-b border-gray-300 pb-2">
+                            👤 <span id="summary-student" class="text-blue-600 font-bold">O학년 O번</span>
+                        </p>
+                        <p class="text-2xl text-gray-700 mb-3 border-b border-gray-300 pb-2">
+                            <span id="summary-symptom-icon">❓</span> <span id="summary-symptom" class="text-red-500 font-bold">어디가 아파요</span>
+                        </p>
+                        <p class="text-2xl text-gray-700">
+                            🕒 <span id="summary-onset" class="text-orange-500 font-bold">언제부터 그랬어요</span>
+                        </p>
+                    </div>
+
+                    <button onclick="submitAndWait()" class="btn-jelly bg-green-500 hover:bg-green-600 text-white text-2xl py-4 px-10 rounded-full shadow-lg border-b-4 border-green-700 w-full font-bold">
+                        이 내용이 맞아요!
+                    </button>
+                </div>
+            </div>
+
+            <!-- 6. 선생님 확인 및 대기 안내 페이지 (신규 추가) -->
+            <div id="page-waiting" class="page flex-col items-center justify-center w-full h-full p-6 text-center">
+                <div class="bg-white p-10 rounded-3xl shadow-xl border-4 border-amber-300 max-w-lg w-full flex flex-col items-center">
+                    <div class="text-7xl mb-6 animate-bounce">👩‍⚕️</div>
+                    <h2 class="text-3xl text-amber-600 font-bold mb-3">선생님이 확인 중이에요!</h2>
+                    <p class="text-2xl text-gray-600 mb-6 font-semibold">조금만 기다려주세요! 🩺</p>
+                    <div class="w-16 h-16 border-4 border-amber-400 border-t-transparent rounded-full animate-spin mb-6"></div>
+                    
+                    <!-- 홈으로 돌아가기 버튼 추가 -->
+                    <button onclick="resetKiosk()" class="btn-jelly bg-amber-400 hover:bg-amber-500 text-white text-xl py-3 px-8 rounded-2xl shadow-md border-b-4 border-amber-600 font-bold mb-3 flex items-center space-x-2">
+                        <span>🏠</span>
+                        <span>처음 화면으로 돌아가기</span>
+                    </button>
+
+                    <p class="text-sm text-gray-400">잠시 후 자동으로 처음 화면으로 이동합니다</p>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- 방문 기록 확인 모달 (신규 추가) -->
+    <div id="records-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl p-6 w-full max-w-2xl h-[80vh] flex flex-col shadow-2xl border-4 border-emerald-300">
+            <div class="flex justify-between items-center mb-4 border-b pb-3">
+                <h3 class="text-3xl font-bold text-gray-700 flex items-center space-x-2">
+                    <span>📋</span>
+                    <span>오늘의 방문 기록</span>
+                </h3>
+                <button onclick="closeRecordsModal()" class="text-gray-400 hover:text-gray-600 text-3xl font-bold">&times;</button>
+            </div>
+
+            <div id="records-list" class="flex-1 overflow-y-auto space-y-3 pr-2">
+                <!-- JS로 기록 목록 삽입 -->
+            </div>
+
+            <div class="mt-4 pt-3 border-t flex justify-between items-center">
+                <button onclick="clearRecords()" class="btn-jelly bg-rose-500 hover:bg-rose-600 text-white px-4 py-2 rounded-xl text-lg font-bold shadow">
+                    🗑️ 전체 삭제
+                </button>
+                <button onclick="closeRecordsModal()" class="btn-jelly bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-xl text-lg font-bold shadow">
+                    닫기
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 학생 데이터 저장 상태
+        const studentData = {
+            grade: null,
+            number: null,
+            symptom: null,
+            symptomIcon: null,
+            onset: null
+        };
+
+        let waitingTimer = null;
+
+        // 초기화 시 번호판 생성 (1번부터 30번까지)
+        function initNumberGrid() {
+            const grid = document.getElementById('number-grid');
+            grid.innerHTML = '';
+            for (let i = 1; i <= 30; i++) {
+                const btn = document.createElement('button');
+                btn.className = 'btn-jelly bg-sky-200 text-sky-800 text-4xl py-6 rounded-2xl shadow-md border-b-4 border-sky-300 font-bold';
+                btn.innerText = i;
+                btn.onclick = () => selectNumber(i);
+                grid.appendChild(btn);
+            }
+        }
+
+        // 페이지 이동 공통 함수
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            document.getElementById(pageId).classList.add('active');
+            
+            // 시기 페이지가 아니면 기타 입력창 초기화
+            if (pageId !== 'page-onset') {
+                hideCustomOnsetInput();
+            }
+        }
+
+        function goBack(pageId) {
+            showPage(pageId);
+        }
+
+        // 선택 로직 함수들
+        function selectGrade(grade) {
+            studentData.grade = grade;
+            showPage('page-number');
+        }
+
+        function selectNumber(num) {
+            studentData.number = num;
+            showPage('page-symptom');
+        }
+
+        function selectSymptom(symptom, icon) {
+            studentData.symptom = symptom;
+            studentData.symptomIcon = icon;
+            showPage('page-onset');
+        }
+
+        function selectOnset(onset) {
+            studentData.onset = onset;
+            hideCustomOnsetInput();
+            showSummary();
+        }
+
+        // 기타 입력창 보여주기
+        function showCustomOnsetInput() {
+            const container = document.getElementById('custom-onset-container');
+            container.classList.remove('hidden');
+            const input = document.getElementById('custom-onset-input');
+            input.value = '';
+            input.focus();
+        }
+
+        // 기타 입력창 숨기기
+        function hideCustomOnsetInput() {
+            const container = document.getElementById('custom-onset-container');
+            container.classList.add('hidden');
+        }
+
+        // 기타 직접 입력 제출
+        function submitCustomOnset() {
+            const input = document.getElementById('custom-onset-input');
+            const text = input.value.trim();
+            if (text === '') {
+                return;
+            }
+            selectOnset(`기타 (${text})`);
+        }
+
+        // 결과 요약 보여주기
+        function showSummary() {
+            document.getElementById('summary-student').innerText = `${studentData.grade}학년 ${studentData.number}번`;
+            document.getElementById('summary-symptom').innerText = studentData.symptom;
+            document.getElementById('summary-symptom-icon').innerText = studentData.symptomIcon;
+            document.getElementById('summary-onset').innerText = studentData.onset;
+            showPage('page-complete');
+        }
+
+        // 기록 저장 후 대기 페이지로 이동
+        function submitAndWait() {
+            saveToLocalStorage();
+            showPage('page-waiting');
+
+            // 3.5초 대기 후 자동으로 홈 화면으로 리셋
+            if (waitingTimer) clearTimeout(waitingTimer);
+            waitingTimer = setTimeout(() => {
+                resetKiosk();
+            }, 3500);
+        }
+
+        // LocalStorage 저장
+        function saveToLocalStorage() {
+            const currentRecords = JSON.parse(localStorage.getItem('health_room_records') || '[]');
+            const now = new Date();
+            const timeString = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+            
+            const newRecord = {
+                id: Date.now(),
+                grade: studentData.grade,
+                number: studentData.number,
+                symptom: studentData.symptom,
+                symptomIcon: studentData.symptomIcon,
+                onset: studentData.onset,
+                time: timeString
+            };
+
+            currentRecords.unshift(newRecord); // 최근 기록이 가장 위로
+            localStorage.setItem('health_room_records', JSON.stringify(currentRecords));
+        }
+
+        // 기록 확인 모달 열기
+        function openRecordsModal() {
+            const modal = document.getElementById('records-modal');
+            const listContainer = document.getElementById('records-list');
+            const records = JSON.parse(localStorage.getItem('health_room_records') || '[]');
+
+            listContainer.innerHTML = '';
+
+            if (records.length === 0) {
+                listContainer.innerHTML = `
+                    <div class="h-full flex flex-col items-center justify-center text-gray-400 py-12">
+                        <span class="text-6xl mb-2">🍃</span>
+                        <p class="text-2xl font-bold">아직 방문한 기록이 없어요!</p>
+                    </div>
+                `;
+            } else {
+                records.forEach((rec, idx) => {
+                    const card = document.createElement('div');
+                    card.className = 'bg-gray-50 border-2 border-gray-200 rounded-2xl p-4 flex items-center justify-between shadow-sm hover:border-emerald-300 transition-colors';
+                    card.innerHTML = `
+                        <div class="flex items-center space-x-3">
+                            <span class="bg-emerald-100 text-emerald-800 text-xl font-bold px-3 py-1 rounded-xl">
+                                ${rec.grade}학년 ${rec.number}번
+                            </span>
+                            <div>
+                                <div class="text-xl font-bold text-gray-800 flex items-center space-x-1">
+                                    <span>${rec.symptomIcon || '🤒'}</span>
+                                    <span>${rec.symptom}</span>
+                                </div>
+                                <div class="text-sm text-gray-500">
+                                    ⏱️ ${rec.onset}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <span class="text-lg text-gray-400 font-bold">${rec.time}</span>
+                            <button onclick="deleteRecord(${rec.id})" class="text-red-400 hover:text-red-600 font-bold text-xl px-2">✕</button>
+                        </div>
+                    `;
+                    listContainer.appendChild(card);
+                });
+            }
+
+            modal.classList.remove('hidden');
+        }
+
+        // 기록 모달 닫기
+        function closeRecordsModal() {
+            document.getElementById('records-modal').classList.add('hidden');
+        }
+
+        // 개별 기록 삭제
+        function deleteRecord(id) {
+            let records = JSON.parse(localStorage.getItem('health_room_records') || '[]');
+            records = records.filter(r => r.id !== id);
+            localStorage.setItem('health_room_records', JSON.stringify(records));
+            openRecordsModal(); // 새로고침
+        }
+
+        // 전체 기록 삭제
+        function clearRecords() {
+            localStorage.removeItem('health_room_records');
+            openRecordsModal();
+        }
+
+        // 처음으로 리셋
+        function resetKiosk() {
+            if (waitingTimer) clearTimeout(waitingTimer);
+            studentData.grade = null;
+            studentData.number = null;
+            studentData.symptom = null;
+            studentData.symptomIcon = null;
+            studentData.onset = null;
+            showPage('page-grade');
+        }
+
+        // 화면 로드 시 초기화
+        window.onload = () => {
+            initNumberGrid();
+        };
+    </script>
+</body>
+</html>
